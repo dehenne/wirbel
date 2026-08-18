@@ -38,9 +38,12 @@ export async function run(argv) {
   const temporary = await mkdtemp(join(tmpdir(), 'wirbel-'));
   const wavPath = join(temporary, 'render.wav');
 
-  console.log(`Rendering ${options.input} ...`);
+  if (!options.json) {
+    console.log(`Rendering ${options.input} ...`);
+  }
+  let renderInfo;
   try {
-    await renderStrudel({
+    renderInfo = await renderStrudel({
       cycles: options.cycles,
       duration: options.duration,
       profilePath: join(temporary, 'chrome'),
@@ -56,7 +59,21 @@ export async function run(argv) {
   } finally {
     await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
-  console.log(`Created ${options.output}`);
+  const result = {
+    ok: true,
+    input: options.input,
+    output: options.output,
+    format: options.format,
+    cycles: options.cycles ?? options.duration * renderInfo.cps,
+    duration: renderInfo.duration,
+    cps: renderInfo.cps,
+  };
+  if (options.json) {
+    console.log(JSON.stringify(result));
+  } else {
+    console.log(`Created ${options.output}`);
+  }
+  return result;
 }
 
 function helpText() {
@@ -72,6 +89,7 @@ Options:
   -c, --cycles <number>    Number of cycles to render (default: 16)
   -d, --duration <seconds> Exact duration instead of a cycle count
       --force              Overwrite an existing output file
+      --json               Print a machine-readable result
   -h, --help               Show this help
   -v, --version            Show the version
       --about              Show project and license information

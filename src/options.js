@@ -17,13 +17,17 @@ export function parseOptions(argv, cwd = process.cwd()) {
       force: { type: 'boolean' },
       format: { type: 'string', short: 'f' },
       help: { type: 'boolean', short: 'h' },
+      json: { type: 'boolean' },
       target: { type: 'string', short: 't' },
       version: { type: 'boolean', short: 'v' },
     },
   });
 
   if (values.help || values.version || values.about) {
-    return { action: values.help ? 'help' : values.version ? 'version' : 'about' };
+    return {
+      action: values.help ? 'help' : values.version ? 'version' : 'about',
+      json: values.json ?? false,
+    };
   }
 
   if (positionals.length !== 1) {
@@ -60,6 +64,7 @@ export function parseOptions(argv, cwd = process.cwd()) {
     force: values.force ?? false,
     format,
     input,
+    json: values.json ?? false,
     output,
     target,
   };

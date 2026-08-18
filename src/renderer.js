@@ -55,9 +55,11 @@ export async function renderStrudel({ source, wavPath, profilePath, cycles, dura
       }
       if (request.method === 'POST' && url.pathname === '/result') {
         await pipeline(request, createWriteStream(wavPath, { flags: 'wx' }));
+        const cps = Number(request.headers['x-wirbel-cps']);
+        const renderedDuration = Number(request.headers['x-wirbel-duration']);
         completed = true;
         send(response, 204, 'text/plain', '');
-        settle();
+        settle({ cps, duration: renderedDuration });
         return;
       }
       if (request.method === 'POST' && url.pathname === '/error') {
@@ -131,7 +133,7 @@ export async function renderStrudel({ source, wavPath, profilePath, cycles, dura
   timeout.unref();
 
   try {
-    await result;
+    return await result;
   } finally {
     clearTimeout(timeout);
     if (chrome.exitCode === null) {
@@ -216,7 +218,14 @@ function renderPage() {
           if (!rendered) {
             throw new Error('Strudel produced no audio data');
           }
-          const response = await fetch('/result', { method: 'POST', body: rendered });
+          const response = await fetch('/result', {
+            method: 'POST',
+            headers: {
+              'X-Wirbel-Cps': String(cps),
+              'X-Wirbel-Duration': String(end / cps),
+            },
+            body: rendered,
+          });
           if (!response.ok) {
             throw new Error(await response.text());
           }

@@ -15,13 +15,15 @@ integrationTest('renders a Strudel synth and converts it to MP3', async () => {
   const mp3Path = join(directory, 'render.mp3');
 
   try {
-    await renderStrudel({
+    const result = await renderStrudel({
       cycles: undefined,
       duration: 0.25,
       profilePath: join(directory, 'chrome'),
       source: 'note("c3 e3 g3 c4").s("sine").gain(0.8)',
       wavPath,
     });
+    assert.equal(result.duration, 0.25);
+    assert.ok(result.cps > 0);
     const wav = await readFile(wavPath);
     assert.equal(wav.subarray(0, 4).toString(), 'RIFF');
     assert.ok(wav.length > 44);

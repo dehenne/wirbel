@@ -28,6 +28,12 @@ test('resolves a target directory and duration', () => {
   assert.equal(options.cycles, undefined);
 });
 
+test('enables machine-readable output', () => {
+  const options = parseOptions(['song.strudel', '--format', 'wav', '--json'], '/music');
+
+  assert.equal(options.json, true);
+});
+
 test('rejects unsupported formats', () => {
   assert.throws(
     () => parseOptions(['song.strudel', '--format', 'flac']),
