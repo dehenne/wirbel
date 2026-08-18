@@ -1,0 +1,44 @@
+{
+  "name": "wirbel",
+  "version": "0.1.0",
+  "description": "Render Strudel patterns to audio from the command line.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "bin": {
+    "wirbel": "./bin/wirbel.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "LICENSE",
+    "README.md",
+    "CONTRIBUTING.md"
+  ],
+  "scripts": {
+    "check": "node --check bin/wirbel.js && node --check src/*.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "linux"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dehenne/wirbel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dehenne/wirbel/issues"
+  },
+  "homepage": "https://github.com/dehenne/wirbel#readme",
+  "keywords": [
+    "audio",
+    "cli",
+    "live-coding",
+    "strudel"
+  ],
+  "dependencies": {
+    "@strudel/web": "1.3.0"
+  }
+}
