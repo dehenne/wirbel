@@ -1,5 +1,9 @@
 # Wirbel
 
+[![CI](https://github.com/dehenne/wirbel/actions/workflows/ci.yml/badge.svg)](https://github.com/dehenne/wirbel/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/wirbel)](https://www.npmjs.com/package/wirbel)
+[![license](https://img.shields.io/github/license/dehenne/wirbel)](LICENSE)
+
 Render [Strudel](https://strudel.cc/) patterns to audio from your terminal.
 
 Wirbel is a command-line audio renderer for Strudel, the browser-based music
