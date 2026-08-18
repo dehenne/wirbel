@@ -32,6 +32,10 @@
     "url": "https://github.com/dehenne/wirbel/issues"
   },
   "homepage": "https://github.com/dehenne/wirbel#readme",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "keywords": [
     "audio",
     "cli",
