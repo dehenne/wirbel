@@ -12,7 +12,8 @@
     "src",
     "LICENSE",
     "README.md",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "SECURITY.md"
   ],
   "scripts": {
     "check": "node --check bin/wirbel.js && node --check src/*.js",
