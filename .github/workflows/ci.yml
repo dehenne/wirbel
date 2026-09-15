@@ -15,11 +15,14 @@ concurrency:
 
 jobs:
   test:
-    name: Tests (Node ${{ matrix.node }})
-    runs-on: ubuntu-latest
+    name: Tests (Node ${{ matrix.node }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
         node:
           - 20.x
           - 22.x
@@ -44,8 +47,14 @@ jobs:
         run: npm test
 
   integration:
-    name: Browser integration
-    runs-on: ubuntu-latest
+    name: Browser integration (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -64,11 +73,22 @@ jobs:
         with:
           version: "9.0"
 
-      - name: Verify system dependencies
+      - name: Verify system dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
           browser="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           "$browser" --version
           echo "WIRBEL_BROWSER=$browser" >> "$GITHUB_ENV"
+          ffmpeg -version
+
+      - name: Verify system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          browser="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          if [ ! -x "$browser" ]; then
+            brew install --cask google-chrome
+          fi
+          "$browser" --version
           ffmpeg -version
 
       - name: Run integration tests
