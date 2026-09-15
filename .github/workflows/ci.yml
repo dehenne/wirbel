@@ -68,10 +68,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set up FFmpeg
+      # Version strings are not portable across platforms: the Linux builds are
+      # tagged "9.0" while the macOS arm64 builds drop the point and are tagged
+      # "9". Pinning one value for every runner 404s on the other.
+      - name: Set up FFmpeg (Linux)
+        if: runner.os == 'Linux'
         uses: AnimMouse/setup-ffmpeg@178e0b4a408f06ce40d896c3cd79f50fa6f8b0c3 # v1.2.5
         with:
           version: "9.0"
+
+      - name: Set up FFmpeg (macOS)
+        if: runner.os == 'macOS'
+        uses: AnimMouse/setup-ffmpeg@178e0b4a408f06ce40d896c3cd79f50fa6f8b0c3 # v1.2.5
+        with:
+          version: "9"
 
       - name: Verify system dependencies (Linux)
         if: runner.os == 'Linux'
@@ -86,7 +96,8 @@ jobs:
         run: |
           browser="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
           if [ ! -x "$browser" ]; then
-            brew install --cask google-chrome
+            echo "::error::Expected Google Chrome at $browser on the macOS runner."
+            exit 1
           fi
           "$browser" --version
           ffmpeg -version

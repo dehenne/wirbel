@@ -16,7 +16,7 @@ welcome, but they must not break the documented Linux behavior.
 
 Wirbel requires:
 
-- Linux
+- Linux or macOS
 - Node.js 20 or newer
 - Google Chrome or Chromium
 - FFmpeg

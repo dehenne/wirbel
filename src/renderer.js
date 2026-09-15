@@ -1,25 +1,26 @@
 import { spawn } from 'node:child_process';
 import { constants, createWriteStream } from 'node:fs';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 
-const linuxBrowserCandidates = [
+const linuxBrowserCandidates = Object.freeze([
   '/usr/bin/google-chrome',
   '/usr/bin/google-chrome-stable',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
   '/snap/bin/chromium',
-];
+]);
 
-const darwinBrowserCandidates = [
+// Chrome and Chromium only. Other Chromium forks are deliberately excluded:
+// Brave, for example, randomises Web Audio output per session, which yields a
+// structurally valid but silently corrupted render.
+const darwinBrowserCandidates = Object.freeze([
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/Applications/Chromium.app/Contents/MacOS/Chromium',
-  '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
-  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
-];
+]);
 
 export function browserCandidatesFor(platform) {
   return platform === 'darwin' ? darwinBrowserCandidates : linuxBrowserCandidates;
@@ -156,22 +157,37 @@ export async function renderStrudel({ source, wavPath, profilePath, cycles, dura
   }
 }
 
-async function findBrowser() {
-  const platformCandidates = browserCandidatesFor(process.platform);
-  const candidates = process.env.WIRBEL_BROWSER
-    ? [process.env.WIRBEL_BROWSER, ...platformCandidates]
-    : platformCandidates;
+export async function findBrowser({
+  platform = process.platform,
+  override = process.env.WIRBEL_BROWSER,
+  isExecutableFile = defaultIsExecutableFile,
+} = {}) {
+  const platformCandidates = browserCandidatesFor(platform);
+  const candidates = override ? [override, ...platformCandidates] : platformCandidates;
   for (const candidate of candidates) {
-    try {
-      await access(candidate, constants.X_OK);
+    if (await isExecutableFile(candidate)) {
       return candidate;
-    } catch {
-      // Try the next supported browser path.
     }
   }
   throw new Error(
     'Chrome or Chromium was not found. Install it or set WIRBEL_BROWSER to its executable.',
   );
+}
+
+// access(X_OK) alone is not enough: directories are executable, so a macOS
+// ".app" bundle path would resolve here and then fail at spawn with a bare
+// EACCES. Require a real file.
+async function defaultIsExecutableFile(candidate) {
+  try {
+    const stats = await stat(candidate);
+    if (!stats.isFile()) {
+      return false;
+    }
+    await access(candidate, constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function send(response, status, contentType, body) {
