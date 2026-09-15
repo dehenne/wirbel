@@ -14,7 +14,7 @@ number of cycles, and render the pattern to WAV, MP3, or OGG:
 wirbel soundtrack.strudel --format mp3
 ```
 
-Wirbel is currently designed for Linux.
+Wirbel runs on Linux and macOS.
 
 ## Why Wirbel?
 
@@ -50,13 +50,13 @@ reimplementing Strudel export themselves.
 
 ## Requirements
 
-- Linux
+- Linux or macOS
 - Node.js 20 or newer
 - Google Chrome or Chromium
 - FFmpeg for MP3 and OGG output
 
-Wirbel searches the common Linux locations for Chrome and Chromium. If your
-browser is installed elsewhere, set `WIRBEL_BROWSER` to its executable:
+Wirbel searches the common Linux and macOS locations for Chrome and Chromium. If
+your browser is installed elsewhere, set `WIRBEL_BROWSER` to its executable:
 
 ```shell
 export WIRBEL_BROWSER=/path/to/chromium

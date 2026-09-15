@@ -6,13 +6,24 @@ import { dirname, join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 
-const browserCandidates = [
+const linuxBrowserCandidates = [
   '/usr/bin/google-chrome',
   '/usr/bin/google-chrome-stable',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
   '/snap/bin/chromium',
 ];
+
+const darwinBrowserCandidates = [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+];
+
+export function browserCandidatesFor(platform) {
+  return platform === 'darwin' ? darwinBrowserCandidates : linuxBrowserCandidates;
+}
 
 export async function renderStrudel({ source, wavPath, profilePath, cycles, duration }) {
   const browser = await findBrowser();
@@ -146,9 +157,10 @@ export async function renderStrudel({ source, wavPath, profilePath, cycles, dura
 }
 
 async function findBrowser() {
+  const platformCandidates = browserCandidatesFor(process.platform);
   const candidates = process.env.WIRBEL_BROWSER
-    ? [process.env.WIRBEL_BROWSER, ...browserCandidates]
-    : browserCandidates;
+    ? [process.env.WIRBEL_BROWSER, ...platformCandidates]
+    : platformCandidates;
   for (const candidate of candidates) {
     try {
       await access(candidate, constants.X_OK);
