@@ -28,6 +28,15 @@ integrationTest('renders a Strudel synth and converts it to MP3', async () => {
     assert.equal(wav.subarray(0, 4).toString(), 'RIFF');
     assert.ok(wav.length > 44);
 
+    // Container checks alone cannot tell a real render from digital silence,
+    // which is how a Web Audio regression (or a fork that alters audio output)
+    // would present. Assert the samples actually carry signal.
+    let peak = 0;
+    for (let offset = 44; offset + 1 < wav.length; offset += 2) {
+      peak = Math.max(peak, Math.abs(wav.readInt16LE(offset)));
+    }
+    assert.ok(peak > 1_000, `expected audible signal, got peak amplitude ${peak}`);
+
     await convertAudio({ wavPath, output: mp3Path, format: 'mp3', force: false });
     const mp3 = await readFile(mp3Path);
     assert.ok(mp3.length > 100);

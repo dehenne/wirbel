@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
@@ -96,20 +96,27 @@ test('non-darwin platforms use the Linux list', async () => {
 
 test('rejects a directory that is merely executable', async () => {
   // A ".app" bundle is a directory and passes access(X_OK); resolving it would
-  // fail later at spawn with an opaque EACCES. The platform list is stubbed out
-  // so the assertion holds on machines that do have a browser installed.
+  // fail later at spawn with an opaque EACCES. The platform is set to one with
+  // no real candidates so the result depends only on the override.
   const root = await mkdtemp(join(tmpdir(), 'wirbel-browser-'));
   const bundle = join(root, 'Chromium.app');
   await mkdir(bundle);
 
-  let resolved;
-  try {
-    resolved = await findBrowser({ platform: 'darwin', override: bundle });
-  } catch {
-    return; // Nothing else was available, which is also a pass.
-  }
+  await assert.rejects(
+    findBrowser({ candidates: [], override: bundle }),
+    /Chrome or Chromium was not found/,
+  );
+});
 
-  assert.notEqual(resolved, bundle, 'a bundle directory must never be selected');
+test('rejects a regular file that is not executable', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'wirbel-browser-'));
+  const binary = join(root, 'chrome');
+  await writeFile(binary, '#!/bin/sh\n', { mode: 0o644 });
+
+  await assert.rejects(
+    findBrowser({ candidates: [], override: binary }),
+    /Chrome or Chromium was not found/,
+  );
 });
 
 test('accepts a real executable file through the default probe', async () => {
@@ -117,7 +124,7 @@ test('accepts a real executable file through the default probe', async () => {
   const binary = join(root, 'chrome');
   await writeFile(binary, '#!/bin/sh\n', { mode: 0o755 });
 
-  const found = await findBrowser({ platform: 'darwin', override: binary });
+  const found = await findBrowser({ candidates: [], override: binary });
 
   assert.equal(found, binary);
 });
@@ -125,10 +132,28 @@ test('accepts a real executable file through the default probe', async () => {
 test('exposes only Chrome and Chromium on darwin', () => {
   // Other Chromium forks (notably Brave) alter Web Audio output, which would
   // produce a valid-looking but corrupted render.
-  assert.deepEqual(browserCandidatesFor('darwin'), [
+  const candidates = browserCandidatesFor('darwin');
+
+  assert.deepEqual(candidates, [
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    join(homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),
+    join(homedir(), 'Applications/Chromium.app/Contents/MacOS/Chromium'),
   ]);
+});
+
+test('prefers a system install over a per-user one', async () => {
+  const system = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  const user = join(homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+
+  assert.equal(
+    await findBrowser({ platform: 'darwin', override: undefined, isExecutableFile: probe([system, user]) }),
+    system,
+  );
+  assert.equal(
+    await findBrowser({ platform: 'darwin', override: undefined, isExecutableFile: probe([user]) }),
+    user,
+  );
 });
 
 test('platform candidate lists cannot be mutated by callers', () => {

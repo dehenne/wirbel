@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { constants, createWriteStream } from 'node:fs';
 import { access, readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
@@ -17,9 +18,14 @@ const linuxBrowserCandidates = Object.freeze([
 // Chrome and Chromium only. Other Chromium forks are deliberately excluded:
 // Brave, for example, randomises Web Audio output per session, which yields a
 // structurally valid but silently corrupted render.
+//
+// "~/Applications" is searched after "/Applications" because that is where
+// Chrome installs for users without administrator rights.
 const darwinBrowserCandidates = Object.freeze([
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  join(homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),
+  join(homedir(), 'Applications/Chromium.app/Contents/MacOS/Chromium'),
 ]);
 
 export function browserCandidatesFor(platform) {
@@ -160,11 +166,11 @@ export async function renderStrudel({ source, wavPath, profilePath, cycles, dura
 export async function findBrowser({
   platform = process.platform,
   override = process.env.WIRBEL_BROWSER,
+  candidates = browserCandidatesFor(platform),
   isExecutableFile = defaultIsExecutableFile,
 } = {}) {
-  const platformCandidates = browserCandidatesFor(platform);
-  const candidates = override ? [override, ...platformCandidates] : platformCandidates;
-  for (const candidate of candidates) {
+  const searched = override ? [override, ...candidates] : candidates;
+  for (const candidate of searched) {
     if (await isExecutableFile(candidate)) {
       return candidate;
     }

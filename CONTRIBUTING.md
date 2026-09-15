@@ -9,8 +9,8 @@ For bug fixes and small improvements, open a pull request directly. For larger
 features or changes to the CLI interface, open an issue first so the behavior
 and scope can be agreed upon before implementation begins.
 
-Wirbel currently targets Linux. Changes for other operating systems are
-welcome, but they must not break the documented Linux behavior.
+Wirbel targets Linux and macOS. Changes for other operating systems are
+welcome, but they must not break the documented behavior on either platform.
 
 ## Development setup
 

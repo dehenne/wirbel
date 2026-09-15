@@ -16,7 +16,7 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "check": "node --check bin/wirbel.js && node --check src/*.js",
+    "check": "for file in bin/wirbel.js src/*.js test/*.js; do node --check \"$file\" || exit 1; done",
     "test": "node --test"
   },
   "engines": {
