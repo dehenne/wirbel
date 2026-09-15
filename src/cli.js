@@ -102,7 +102,7 @@ Examples:
 
 function aboutText() {
   return `Wirbel ${packageData.version}
-Render Strudel patterns to WAV, MP3, or OGG on Linux.
+Render Strudel patterns to WAV, MP3, or OGG on Linux and macOS.
 
 License: GNU Affero General Public License v3.0 only
 Strudel is used through the @strudel/web npm package.
